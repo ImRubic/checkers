@@ -8,9 +8,10 @@ var state = {
     [null,'w',null,'w',null,'w',null,'w',null,'w'],
     ['w',null,'w',null,'w',null,'w',null,'w',null],
     [null,'w',null,'w',null,'w',null,'w',null,'w'],
+    ['w',null,'w',null,'w',null,'w',null,'w',null],
     [null, null, null, null, null, null, null, null, null, null],
     [null, null, null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null],
+    [null,'b',null,'b',null,'b',null,'b',null,'b'],
     ['b',null,'b',null,'b',null,'b',null,'b',null],
     [null,'b',null,'b',null,'b',null,'b',null,'b'],
     ['b',null,'b',null,'b',null,'b',null,'b',null]
@@ -149,10 +150,66 @@ function checkLanding(moves, jumps, piece, cx, cy, lx, ly) {
 
 /** @function ApplyMove
   * A function to apply the selected move to the game
+  * @param {integer} y - starting y position.
+  * @param {integer} x - starting x position.
   * @param {object} move - the move to apply.
   */
-function applyMove(move) {
+function applyMove(x, y, move) {
   // TODO: Apply the move
-  // TODO: Check for victory
-  // TODO: Start the next turn
+  if (move.type === 'slide') {
+    state.board[move.y][move.x] = state.board[y][x];
+    state.board[y][x] = null;
+  } else {
+    move.captures.forEach(function(square) {
+      state.board[square.y][square.x] = null;
+    });
+    var index = move.landings.length - 1;
+    state.board[move.landings[index].y][move.landings[index].x] = state.board[y][x];
+    state.board[y][x] = null;
+  }
+}
+
+// TODO: Check for victory
+function checkForVictory() {
+  var wCount = 0;
+  var bCount = 0;
+  for (y = 0; y < 10; y++) {
+    for (x = 0; x < 10; x++) {
+      if (state.board[y][x] === 'w' || state.board[y][x] === 'wk') {
+        wCount++;
+      }
+      if (state.board[y][x] === 'b' || state.board[y][x] === 'bk') {
+        bCount++;
+      }
+    }
+  }
+  if (wCount == 0) {
+    state.over = true;
+    return 'black wins';
+  }
+  if (bCount == 0) {
+    state.over = true;
+    return 'white wins';
+  }
+  return false;
+}
+
+// TODO: Start the next turn
+function nextTurn() {
+  if (state.turn === 'b') state.turn = 'w';
+  else state.turn = 'b';
+}
+
+function printBoard() {
+  state.board.forEach(function(row){
+    var ascii = row.map(function(map){
+      if(square) return '_';
+      else return square;
+    });
+    console.log(ascii);
+  });
+}
+
+function main() {
+
 }
