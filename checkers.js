@@ -237,6 +237,10 @@ function getJumpString(move) {
   return "jump to " + jumps + " capturing " + move.captures.length + " piece" + ((move.captures.length > 1)?'s':'');
 }
 
+function processTurn() {
+
+}
+
 /** @function main
   * Entry point to the program.
   * Starts the checkers game.
@@ -247,6 +251,7 @@ function main() {
     input: process.stdin,
     output: process.stdout
   });
+
   // print the board
   printBoard();
   // offer instructions
@@ -272,6 +277,17 @@ function main() {
           } else {
             console.log(index + ". You can " + getJumpString(move));
           }
+        })
+        // Prompt user to pick a move.
+        rl.question("Pick your move from the list:", function(answer) {
+          var command = answer.substring(0,1);
+          if(command === 'c') return;
+          command = parseInt(command);
+          if(command != NaN || command >= moves.length) return;
+          applyMove(x, y, moves[command]);
+          checkForVictory();
+          nextTurn();
+          processTurn();
         })
       }
     }
