@@ -1,13 +1,6 @@
 // checkers.js
 
-/* Require statements */
-const readline = require('readline');
 
-// initialize readline as a global variable
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
 
 /** The state of the game */
 var state = {
@@ -206,3 +199,40 @@ function nextTurn() {
   if(state.turn === 'b') state.turn = 'w';
   else state.turn = 'b';
 }
+
+/** @function handleCheckerClick
+* click handler for checker
+*/
+function handleCheckerClick(event) {
+  event.preventDefault();
+  var parentId = event.target.parent.id;
+  var x = parseInt(parent.getCharacterAt(7));
+  var y = parseInt(parent.getCharacterAt(9));
+
+}
+
+/** @function setup()
+* Sets up the game environment
+*/
+function setup() {
+  var board = document.createElement('selection');
+  board.id = 'game-board';
+  document.body.appendChild(board);
+  for(var y = 0; y < state.board.length; y++){
+    for(var x =0; x < state.board[y].length; x++){
+      var square = document.createElement('div');
+      square.id = "square-" + x + "-" + y;
+      square.classList.add('square');
+      if((y+x) % 2 == 1) square.classList.add('black');
+      board.appendChild(square);
+      if(state.board[y][x]) {
+        var checker = document.createElement('div');
+        checker.classList.add('checker');
+        checker.classList.add('checker-' + state.board[x][y]);
+        square.appendChild(checker);
+      }
+    }
+  }
+}
+
+setup();
