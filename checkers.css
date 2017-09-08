@@ -14,12 +14,6 @@
   height: 100px;
 }
 
-.square {
-  border: 1px solidblack;
-  width: 100px;
-  height: 100px;
-}
-
 .black {
   background-color: darkgray;
 }
@@ -29,13 +23,23 @@
   height: 90px;
   margin: 5px;
   border-radius: 50%;
-  box-shadow: 8px 8px 4px gray;
+  box-shadow: 8px 8px 8px gray;
 }
 
-.checker-w {
+.checker-w, .checker-wk {
   background-color: ivory;
 }
 
-.checker-b {
+.checker-b, .checker-bk {
   background-color: black;
+}
+
+.square.highlight {
+  background-color: yellow;
+}
+
+.checker.highlight {
+  border: 3px solid yellow;
+  width: 80px;
+  height: 80px;
 }
