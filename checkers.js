@@ -19,6 +19,8 @@ var state = {
   captures: {w: 0, b: 0}
 }
 
+var ctx;
+
 /** @function getLegalMoves
   * returns a list of legal moves for the specified
   * piece to make.
@@ -204,65 +206,50 @@ function nextTurn() {
   else state.turn = 'b';
 }
 
-/** @function clearHighlights
-  * Clears all highligted squares
-  */
-function clearHighlights() {
-  var highlighted = document.querySelectorAll('.highlight');
-  highlighted.forEach(function(square){
-    square.classList.remove('highlight');
-  });
-}
+function renderBoard() {
+  if(!ctx) return;
+  for(var y = 0; y < 10; y++) {
+    for(var x = 0; x < 10; x++) {
+      if((x + y) % 2 == 1) {
+        ctx.fillStyle = '#888';
+        ctx.fillRect(x*100, y*100, 100, 100);
+        if(state.board[y][x]) {
+          ctx.beginPath();
+          if(state.board[y][x].charAt(0) === 'w') {
+            ctx.fillStyle = '#fff';
+          } else {
+            ctx.fillStyle = '#000';
+          }
+          ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-/** @function handleCheckerClick
-  * Click handler for checker
-  */
-function handleCheckerClick(event) {
-  event.preventDefault();
-  var parentId = event.target.parentElement.id;
-  var x = parseInt(parentId.charAt(7));
-  var y = parseInt(parentId.charAt(9));
-  var piece = state.board[y][x];
-  // Clear old highlights
-  clearHighlights();
-  // Make sure the checker is the player's
-  if(piece.charAt(0) !== state.turn) return;
-  // Get legal moves
-  var moves = getLegalMoves(state.board[y][x], x, y);
-  // mark checker to move
-  event.target.classList.add('highlight');
-  // Mark squares available for moves
-  moves.forEach(function(move){
-    if(move.type === 'slide') {
-      var square = document.getElementById('square-' + move.x + '-' + move.y);
-      square.classList.add('highlight');
-    }
-  })
-}
-
-/** @function setup
-  * Sets up the game environment
-  */
-function setup() {
-  var board = document.createElement('section');
-  board.id = 'game-board';
-  document.body.appendChild(board);
-  for(var y = 0; y < state.board.length; y++){
-    for(var x = 0; x < state.board[y].length; x++){
-      var square = document.createElement('div');
-      square.id = "square-" + x + "-" + y;
-      square.classList.add('square');
-      if((y+x) % 2 === 1) square.classList.add('black');
-      board.appendChild(square);
-      if(state.board[y][x]) {
-        var checker = document.createElement('div');
-        checker.classList.add('checker');
-        checker.classList.add('checker-' + state.board[y][x]);
-        checker.onclick = handleCheckerClick;
-        square.appendChild(checker);
       }
     }
   }
+}
+
+function hoverOverChecker(event) {
+  if(!ctx) return;
+  var x = Math.floor(event.clientX / 100);
+  var y = Math.floor(event.clientY / 100);
+  console.log(x, y);
+  if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
+    ctx.strokeStyle = "yellow";
+    ctx.beginPath();
+    ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function setup() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1000;
+  canvas.height = 1000;
+  canvas.onmousemove = hoverOverChecker;
+  document.body.appendChild(canvas);
+  ctx = canvas.getContext('2d');
+  renderBoard();
 }
 
 setup();
