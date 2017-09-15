@@ -2,6 +2,7 @@
 
 /** The state of the game */
 var state = {
+  action: 'idle',
   over: false,
   turn: 'b',
   board: [
@@ -206,39 +207,157 @@ function nextTurn() {
   else state.turn = 'b';
 }
 
-function renderBoard() {
-  if(!ctx) return;
-  for(var y = 0; y < 10; y++) {
-    for(var x = 0; x < 10; x++) {
-      if((x + y) % 2 == 1) {
-        ctx.fillStyle = '#888';
-        ctx.fillRect(x*100, y*100, 100, 100);
-        if(state.board[y][x]) {
-          ctx.beginPath();
-          if(state.board[y][x].charAt(0) === 'w') {
-            ctx.fillStyle = '#fff';
-          } else {
-            ctx.fillStyle = '#000';
-          }
-          ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
-          ctx.fill();
-        }
+/** @function renderChecker
+  * Renders a checker at the specified position
+  */
+function renderChecker(piece, x, y) {
+  ctx.beginPath();
+  if(state.board[y][x].charAt(0) === 'w') {
+    ctx.fillStyle = '#fff';
+  } else {
+    ctx.fillStyle = '#000';
+  }
+  ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
+  ctx.fill();
+  // TODO: Add a crown for kings
+}
 
-      }
+/** @function renderSquare
+  * Renders a single square on the game board
+  * as well as any checkers on it.
+  */
+function renderSquare(x,y) {
+  if((x + y) % 2 == 1) {
+    ctx.fillStyle = '#888';
+    ctx.fillRect(x*100, y*100, 100, 100);
+    if(state.board[y][x]) {
+      renderChecker(state.board[y][x], x, y);
     }
   }
 }
 
-function hoverOverChecker(event) {
+/** @function renderBoard()
+  * Renders the entire game board.
+  */
+function renderBoard() {
   if(!ctx) return;
-  var x = Math.floor(event.clientX / 100);
-  var y = Math.floor(event.clientY / 100);
-  console.log(x, y);
+  for(var y = 0; y < 10; y++) {
+    for(var x = 0; x < 10; x++) {
+      renderSquare(x, y);
+    }
+  }
+}
+
+function boardPosition(x, y) {
+  var boardX = Math.floor(x / 50);
+  var boardY = Math.floor(y / 50);
+  return {x: boardX, y: boardY}
+}
+
+function handleMouseDown() {
+  var position = boardPosition(event.clientX, event.clientY);
+  var x = position.x;
+  var y = position.y;
+  if(x < 0 || y < 0 || x > 9 || y > 9) return;
+  // Make sure we're over the current player
   if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
+    //pick up piece
+    state.movingPiece = {
+      piece: state.board[y][x],
+      start: {x: x, y: y},
+      currentPosition: boardPosition(event.clientX, event.clientY)
+    }
+    state.action = 'dragging';
+    state.board[y][x] = null;
+    renderBoard();
+  }
+}
+
+function handleMouseUp() {
+  if(!state.action == 'dragging') return;
+  var position = boardPosition(event.clientX, event.clientY);
+  var x = position.x;
+  var y = position.y;
+  if(x < 0 || y < 0 || x > 9 || y > 9) return;
+  // Make sure we're over the current player
+  if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
+    //Release off board; rubberband back to statePosition
+    var sx = state.movingPiece.startPosition.x;
+    var sy = state.movingPiece.startPosition.y;
+    state.board[sy][sx] = state.movingPiece.puiece;
+    state.movingPiece = null;
+    renderBoard();
+    return;
+  };
+  // If the drop is partof a legal move...
+  if(true) {
+    var lx = state.movingPiece.currentPosition.x;
+    var ly = state.movingPiece.currentPosition.y;
+    state[ly][lx] = state.movingPiece.piece;
+    state.movingPiece = null;
+    state.action = 'idle';
+    renderBoard();
+    return;
+  }
+}
+
+function renderDragging() {
+  renderBoard();
+  // Render our ghost checker
+  ctx.fillStyle = '#555';
+  ctx.beginPath();
+  ctx.arc(
+    state.movingPiece.startPosition.x*100+50,
+    state.movingPiece.startPosition.y*100+50,
+    40, 0, Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.fillStyle = '#555';
+  ctx.beginPath();
+  ctx.arc(
+    state.movingPiece.startPosition.x*100+50,
+    state.movingPiece.startPosition.y*100+50,
+    40, 0, Math.PI * 2
+  );
+  ctx.fill();
+
+}
+
+function handleMouseMove(event) {
+  renderBoard();
+  switch(state.action) {
+    case 'idle':
+      hoverOverChecker(event);
+      break;
+    case 'dragging':
+    state.movingPiece.currentPosition = boardPosition(event.clientX, event.clientY);
+    renderDragging();
+      break;
+  }
+}
+
+/** @function hoverOverChecker
+  * Event handler for when a player is deciding
+  * where to move.
+  */
+function hoverOverChecker(event) {
+  // Make sure we have a canvas context to render to
+  if(!ctx) return;
+  var x = Math.floor(event.clientX / 50);
+  var y = Math.floor(event.clientY / 50);
+  // Adjust for scrolling
+  // Avoid array out-of-bounds issues.
+  if(x < 0 || y < 0 || x > 9 || y > 9) return;
+  // Make sure we're over the current player
+  if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
+    // Highlight the checker to move
+    ctx.strokeWidth = 15;
     ctx.strokeStyle = "yellow";
     ctx.beginPath();
     ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
     ctx.stroke();
+    // TODO: Highlight possible moves
   }
 }
 
@@ -246,7 +365,9 @@ function setup() {
   var canvas = document.createElement('canvas');
   canvas.width = 1000;
   canvas.height = 1000;
-  canvas.onmousemove = hoverOverChecker;
+  canvas.onmousedown = handleMouseDown;
+  canvas.onmouseup = handleMouseUp;
+  canvas.onmousemove = handleMouseMove;
   document.body.appendChild(canvas);
   ctx = canvas.getContext('2d');
   renderBoard();
